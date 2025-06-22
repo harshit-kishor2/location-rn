@@ -1,6 +1,5 @@
 import {Alert, Linking, PermissionsAndroid, Platform, ToastAndroid} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
-import VIForegroundService from '@voximplant/react-native-foreground-service';
 import {useLiveTrackerStore} from '../store/useLiveTracker';
 
 let watchId: number | null = null;
@@ -83,10 +82,6 @@ export const getLocationUpdates = async () => {
     return;
   }
 
-  if (Platform.OS === 'android') {
-    await startForegroundService();
-  }
-
   watchId = Geolocation.watchPosition(
     position => {
       const pos = {
@@ -115,31 +110,8 @@ export const getLocationUpdates = async () => {
   );
 };
 
-const startForegroundService = async () => {
-  if (Platform.Version >= '26') {
-    await VIForegroundService.getInstance().createNotificationChannel({
-      id: 'locationChannel',
-      name: 'Location Tracking Channel',
-      description: 'Tracks location of user',
-      enableVibration: false,
-    });
-  }
-
-  return VIForegroundService.getInstance().startService({
-    channelId: 'locationChannel',
-    id: 420,
-    title: 'Hipster',
-    text: 'Tracking location updates',
-    icon: 'ic_launcher',
-  });
-};
 
 export const stopLocationUpdates = () => {
-  if (Platform.OS === 'android') {
-    VIForegroundService.getInstance()
-      .stopService()
-      .catch((err: any) => err);
-  }
   if (watchId !== null) {
     Geolocation.clearWatch(watchId);
     watchId = null;
